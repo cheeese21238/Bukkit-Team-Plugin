@@ -367,6 +367,36 @@ public class CommandExe implements CommandExecutor {
 				return true;
 			}
 			
+			if (action.equals("lockGear")) {
+				if(sender.hasPermission(permission + ".manage")) {
+					if (tm.lockGear) {
+						tm.lockGear = false;
+						sender.sendMessage(ChatColor.GRAY + "Lock Gear disabled");
+					} else {
+						tm.lockGear = true;
+						sender.sendMessage(ChatColor.GRAY + "Lock Gear enabled");
+					}
+				} else
+					sender.sendMessage(msgPermission);
+				
+				return true;
+			}
+			
+			if (action.equals("colourTeamLeather")) {
+				if(sender.hasPermission(permission + ".manage")) {
+					if (tm.colourTeamLeather) {
+						tm.colourTeamLeather = false;
+						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather disabled");
+					} else {
+						tm.colourTeamLeather = true;
+						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather enabled");
+					}
+				} else
+					sender.sendMessage(msgPermission);
+				
+				return true;
+			}
+			
 			if (action.equals("gamemode")) {
 				if(sender.hasPermission(permission + ".manage")) {
 					if (args.length > 2 && tm.teams.containsKey(args[1])) {
@@ -383,24 +413,24 @@ public class CommandExe implements CommandExecutor {
 				return true;
 			}
 			
-			if (action.equals("specdeath")) { //TODO:rename?
+			if (action.equals("locked")) {
 				if(sender.hasPermission(permission + ".manage")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isSpectateAfterDeath()) {
-							tm.teams.get(args[1]).setSpectateAfterDeath(false);
-							sender.sendMessage(ChatColor.GRAY + "Spectate After Death disabled");
+						if (tm.teams.get(args[1]).isLocked()) {
+							tm.teams.get(args[1]).setLocked(false);
+							sender.sendMessage(ChatColor.GRAY + "Team Lock disabled");
 						} else {
-							tm.teams.get(args[1]).setSpectateAfterDeath(true);
-							sender.sendMessage(ChatColor.GRAY + "Spectate After Death enabled");
+							tm.teams.get(args[1]).setLocked(true);
+							sender.sendMessage(ChatColor.GRAY + "Team Lock enabled");
 						}
 					} else
-						sender.sendMessage(ChatColor.RED + "That team does not exist");
+						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
 				} else
 					sender.sendMessage(msgPermission);
 				
 				return true;
 			}
-			
+					
 			if (action.equals("freeze")) {
 				if(sender.hasPermission(permission + ".manage")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
@@ -437,15 +467,33 @@ public class CommandExe implements CommandExecutor {
 				return true;
 			}
 			
-			/*if (action.equals("friendlyfire")) {
+			if (action.equals("spectateAftrDeath")) {
+				if(sender.hasPermission(permission + ".manage")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isSpectateAfterDeath()) {
+							tm.teams.get(args[1]).setSpectateAfterDeath(false);
+							sender.sendMessage(ChatColor.GRAY + "Spectate After Death disabled");
+						} else {
+							tm.teams.get(args[1]).setSpectateAfterDeath(true);
+							sender.sendMessage(ChatColor.GRAY + "Spectate After Death enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + "That team does not exist");
+				} else
+					sender.sendMessage(msgPermission);
+				
+				return true;
+			}
+			
+			if (action.equals("friendlyfire")) {
 				if(sender.hasPermission(permission + ".manage")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
 						if (tm.teams.get(args[1]).isFriendlyFire()) {
 							tm.teams.get(args[1]).setFriendlyFire(false);
-							sender.sendMessage(ChatColor.GRAY + "Hat Lock disabled");
+							sender.sendMessage(ChatColor.GRAY + "Friendly Fire disabled");
 						} else {
 							tm.teams.get(args[1]).setFriendlyFire(true);
-							sender.sendMessage(ChatColor.GRAY + "Hat Lock enabled");
+							sender.sendMessage(ChatColor.GRAY + "Friendly Fire enabled");
 						}
 					} else
 						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
@@ -453,17 +501,17 @@ public class CommandExe implements CommandExecutor {
 					sender.sendMessage(msgPermission);
 				
 				return true;
-			}*/
+			}
 			
-			if (action.equals("locked")) {
+			if (action.equals("friendlyInvisibles")) {
 				if(sender.hasPermission(permission + ".manage")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isLocked()) {
-							tm.teams.get(args[1]).setLocked(false);
-							sender.sendMessage(ChatColor.GRAY + "Hat Lock disabled");
+						if (tm.teams.get(args[1]).isFriendlyInvisibles()) {
+							tm.teams.get(args[1]).setFriendlyInvisibles(false);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles disabled");
 						} else {
-							tm.teams.get(args[1]).setLocked(true);
-							sender.sendMessage(ChatColor.GRAY + "Hat Lock enabled");
+							tm.teams.get(args[1]).setFriendlyInvisibles(true);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles enabled");
 						}
 					} else
 						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
@@ -676,7 +724,7 @@ public class CommandExe implements CommandExecutor {
 		return false;
 	}
 	
-	public void countdown(int time) {
+	private void countdown(int time) {
 		timmer = time;		
 		countdown = tm.getServer().getScheduler().scheduleSyncRepeatingTask(tm, new Runnable() {
 			public void run() {
@@ -691,7 +739,7 @@ public class CommandExe implements CommandExecutor {
 		}, 20L, 20L);
 	}
 
-	public String playersHealth(Player player) {
+	private String playersHealth(Player player) {
 		ChatColor[] colour = { ChatColor.RED, ChatColor.GOLD, ChatColor.YELLOW, ChatColor.GREEN };
 		String healthBar = "[";
 		for (int i = 1; i <= 20; i++) {
@@ -704,7 +752,7 @@ public class CommandExe implements CommandExecutor {
 		return " - " + healthBar + ChatColor.RESET + "]";
 	}
 
-	public void winner(TeamManager team) {
+	private void winner(TeamManager team) {
 		tm.globalMsg(team.getName() + " WINS!!! YAY go " + team.getName() + " team you rock! :D");
 		for (PlayerState plySte : team.getPlayers()) {
 			Location loc = plySte.getPlayer().getLocation();

@@ -9,8 +9,10 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.util.Vector;
 
 
 public class EventListener implements Listener {
@@ -98,12 +100,12 @@ public class EventListener implements Listener {
 		}
 	}
 		
-	/*
+	
 	@EventHandler
 	public void freezePlayer(PlayerMoveEvent event){
-		if(tm.freeze && tm.players.containsKey(event.getPlayer())){
-			event.setCancelled(true);
+		if(tm.players.containsKey(event.getPlayer()) && tm.players.get(event.getPlayer()).getTeam().isFrozen()){
+			event.getPlayer().setVelocity(new Vector(0,0,0));
 		}
-	}*/
+	}
 
 }

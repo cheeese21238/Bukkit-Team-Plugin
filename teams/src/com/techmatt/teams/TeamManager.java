@@ -165,7 +165,7 @@ public class TeamManager {
 		this.freeze = value;
 		if(value){
 			for (PlayerState plySte : this.players) {
-				plySte.getPlayer().setWalkSpeed(0);
+				plySte.getPlayer().setWalkSpeed((float)0.001);
 				plySte.getPlayer().sendMessage("You have been frozen");
 			}
 		} else {
