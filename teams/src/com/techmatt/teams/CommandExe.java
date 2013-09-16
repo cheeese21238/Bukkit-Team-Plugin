@@ -46,7 +46,7 @@ public class CommandExe implements CommandExecutor {
 						plySte.setSpectateMode(false);
 						sender.sendMessage("Spectator Mode Disabled");
 					} else
-						sender.sendMessage(msgTeamLock); //TODO: better info*/
+						sender.sendMessage("Can't leave spector mode when you are out of the game, will have to wait till the game is finished");
 				}
 			} else
 				sender.sendMessage(msgNotInTeam);
@@ -187,10 +187,21 @@ public class CommandExe implements CommandExecutor {
 			}
 			
 			//-----List Team Info-------------------------------------------------------------------
-			if (action.equals("list")) { //TODO: remove health
+			if (action.equals("list")) {
 				if (tm.teams.size() == 0)
 					sender.sendMessage(ChatColor.RED + "No teams found");
-				else {
+				else if(tm.players.containsKey(sender)) {
+					String msg = "";
+					TeamManager playerTeam = tm.players.get(sender).getTeam();
+					for (TeamManager team : tm.teams.values()) {
+						msg += "\n\n" + team.getName() + " - Score: " + team.getScore() + newline;
+						if(playerTeam == team) {
+							for (PlayerState plySte : team.getPlayers())
+								msg += "\n" + plySte.getPlayer().getDisplayName() + playersHealth(plySte.getPlayer()) + (plySte.isReady() ? " - Ready!" : "") + (plySte.isSpectator() ? " - Spectator!" : "");
+						}
+					}
+					sender.sendMessage(msg);
+				} else {
 					String msg = "";
 					for (TeamManager team : tm.teams.values()) {
 						msg += "\n\n" + team.getName() + " - Score: " + team.getScore() + newline;
@@ -199,6 +210,7 @@ public class CommandExe implements CommandExecutor {
 					}
 					sender.sendMessage(msg);
 				}
+				
 				return true;
 			}
 			
@@ -254,19 +266,6 @@ public class CommandExe implements CommandExecutor {
 				return true;
 			}
 			
-			//-----CountDown-------------------------------------------------------------------
-			if (action.equals("countdown") || action.equals("cd")) {
-				if (sender.hasPermission(permission + ".manage")) {				
-					tm.globalMsg(ChatColor.GRAY + "" + ChatColor.ITALIC + "Be ready to go in...");	
-					if (args.length > 1 && args[1].matches("^[1-9][0-9]?$"))
-						this.countdown(Integer.parseInt(args[1]));
-					else 
-						this.countdown(5);
-				} else
-					sender.sendMessage(msgPermission);
-				return true;
-			}
-			
 			//-----Gather Team Players-------------------------------------------------------------------
 			if (action.equals("gather") || action.equals("tpt")) { //TODO: rewrite for admins and nonadmins
 				if (sender.hasPermission(permission + ".gather")) {
@@ -285,239 +284,6 @@ public class CommandExe implements CommandExecutor {
 				} else
 					sender.sendMessage(msgPermission);
 
-				return true;
-			}
-			
-			//-----Kick Player from Team-------------------------------------------------------------------
-			if (action.equals("kick")) {//TODO: rewrite with better del
-				if (sender.hasPermission(permission + ".kick")) {
-					if (args.length > 1) {
-						Player player = tm.getServer().getPlayer(args[1]);
-						if (tm.players.containsKey(player)) {
-							tm.players.get(player).remove(true);
-							player.sendMessage(ChatColor.RED + "You have been kicked from your team");
-						} else
-							sender.sendMessage(ChatColor.RED + args[1] + " does not exist or is not in a team");
-					} else
-						sender.sendMessage(ChatColor.RED + "Please enter players name you would like to kick");
-				} else
-					sender.sendMessage(msgPermission);
-
-				return true;
-			}
-			
-			//-----Prepare Players for a start-------------------------------------------------------------------
-			if (action.equals("start")) {
-				if (sender.hasPermission(permission + ".manage")) {
-					for (TeamManager team : tm.teams.values()){
-						team.restTeam();
-						team.setFreeze(true);
-					}
-					
-					tm.globalMsg(ChatColor.GRAY + "" + ChatColor.ITALIC + "Be ready to go in...");//TODO:improve
-					this.countdown(5);
-					
-					for (PlayerState plySte : tm.players.values())
-						plySte.setReady(false);
-					
-					for (TeamManager team : tm.teams.values()){
-						team.setFreeze(false);
-					}
-					
-					//TODO: add clear player maybe?
-					
-					
-				} else 
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			//==========================//
-			//-----Toggles YAY :D-------------------------------------------------------------------
-			//==========================// //TODO: look at
-			
-			if (action.equals("dropLoot")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (tm.dropLoot) {
-						tm.dropLoot = false;
-						sender.sendMessage(ChatColor.GRAY + "Drop Loot disabled");
-					} else {
-						tm.dropLoot = true;
-						sender.sendMessage(ChatColor.GRAY + "Drop Loot enabled");
-					}
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-
-			if (action.equals("rejoin")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (tm.rejoin) {
-						tm.rejoin = false;
-						sender.sendMessage(ChatColor.GRAY + "Allow player rejoin disabled");
-					} else {
-						tm.rejoin = true;
-						sender.sendMessage(ChatColor.GRAY + "Allow player rejoin enabled");
-					}
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("lockGear")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (tm.lockGear) {
-						tm.lockGear = false;
-						sender.sendMessage(ChatColor.GRAY + "Lock Gear disabled");
-					} else {
-						tm.lockGear = true;
-						sender.sendMessage(ChatColor.GRAY + "Lock Gear enabled");
-					}
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("colourTeamLeather")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (tm.colourTeamLeather) {
-						tm.colourTeamLeather = false;
-						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather disabled");
-					} else {
-						tm.colourTeamLeather = true;
-						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather enabled");
-					}
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("gamemode")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 2 && tm.teams.containsKey(args[1])) {
-						int gm = Integer.parseInt(args[2]);
-						if(gm >= 0 && gm <= 2){
-							tm.teams.get(args[1]).setGamemode(GameMode.getByValue(gm));
-							sender.sendMessage(ChatColor.GRAY + "Gamemode " + gm + " has been set for " + tm.teams.get(args[1]).getName() + " team");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + "That team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("locked")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isLocked()) {
-							tm.teams.get(args[1]).setLocked(false);
-							sender.sendMessage(ChatColor.GRAY + "Team Lock disabled");
-						} else {
-							tm.teams.get(args[1]).setLocked(true);
-							sender.sendMessage(ChatColor.GRAY + "Team Lock enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-					
-			if (action.equals("freeze")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isFrozen()) {
-							tm.teams.get(args[1]).setFreeze(false);
-							sender.sendMessage(ChatColor.GRAY + "Freeze disabled");
-						} else {
-							tm.teams.get(args[1]).setFreeze(true);
-							sender.sendMessage(ChatColor.GRAY + "Freeze enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + "That team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("breakblock")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isBlockProtected()) {
-							tm.teams.get(args[1]).setBlockProtect(false);
-							sender.sendMessage(ChatColor.GRAY + "Breakblock disabled");
-						} else {
-							tm.teams.get(args[1]).setBlockProtect(true);
-							sender.sendMessage(ChatColor.GRAY + "Breakblock enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + "That team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("spectateAftrDeath")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isSpectateAfterDeath()) {
-							tm.teams.get(args[1]).setSpectateAfterDeath(false);
-							sender.sendMessage(ChatColor.GRAY + "Spectate After Death disabled");
-						} else {
-							tm.teams.get(args[1]).setSpectateAfterDeath(true);
-							sender.sendMessage(ChatColor.GRAY + "Spectate After Death enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + "That team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("friendlyfire")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isFriendlyFire()) {
-							tm.teams.get(args[1]).setFriendlyFire(false);
-							sender.sendMessage(ChatColor.GRAY + "Friendly Fire disabled");
-						} else {
-							tm.teams.get(args[1]).setFriendlyFire(true);
-							sender.sendMessage(ChatColor.GRAY + "Friendly Fire enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-			
-			if (action.equals("friendlyInvisibles")) {
-				if(sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1 && tm.teams.containsKey(args[1])) {
-						if (tm.teams.get(args[1]).isFriendlyInvisibles()) {
-							tm.teams.get(args[1]).setFriendlyInvisibles(false);
-							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles disabled");
-						} else {
-							tm.teams.get(args[1]).setFriendlyInvisibles(true);
-							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles enabled");
-						}
-					} else
-						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
-				} else
-					sender.sendMessage(msgPermission);
-				
 				return true;
 			}
 			
@@ -541,9 +307,217 @@ public class CommandExe implements CommandExecutor {
 				return true;
 			}
 			
-			//-----Set Teams Equipment-------------------------------------------------------------------
-			if (action.equals("setgear")) {
-				if (sender.hasPermission(permission + ".manage")) {
+			//-----Kick Player from Team-------------------------------------------------------------------
+			if (action.equals("kick")) {
+				if (sender.hasPermission(permission + ".kick")) {
+					if (args.length > 1) {
+						Player player = tm.getServer().getPlayer(args[1]);
+						if (tm.players.containsKey(player)) {
+							tm.players.get(player).remove(true);
+							player.sendMessage(ChatColor.RED + "You have been kicked from your team");
+						} else
+							sender.sendMessage(ChatColor.RED + args[1] + " does not exist or is not in a team");
+					} else
+						sender.sendMessage(ChatColor.RED + "Please enter players name you would like to kick");
+				} else
+					sender.sendMessage(msgPermission);
+
+				return true;
+			}
+			
+			if(sender.hasPermission(permission + ".manage") || sender.hasPermission(permission + ".control")) {
+				
+				//-----CountDown-------------------------------------------------------------------
+				if (action.equals("countdown") || action.equals("cd")) {		
+					tm.globalMsg(ChatColor.GRAY + "" + ChatColor.ITALIC + "Be ready to go in...");	
+					if (args.length > 1 && args[1].matches("^[1-9][0-9]?$"))
+						this.countdown(Integer.parseInt(args[1]));
+					else 
+						this.countdown(5);
+					
+					return true;
+				}
+										
+				//-----Prepare Players for a start-------------------------------------------------------------------
+				if (action.equals("start")) {
+					for (TeamManager team : tm.teams.values()){
+						team.restTeam();
+						team.setFreeze(true);
+					}
+					
+					tm.globalMsg(ChatColor.GRAY + "" + ChatColor.ITALIC + "Game starts in...");//TODO:improve
+					this.countdown(5);
+					
+					for (PlayerState plySte : tm.players.values())
+						plySte.setReady(false);
+					
+					for (TeamManager team : tm.teams.values()){
+						team.setFreeze(false);
+					}
+					
+					//TODO: add clear player maybe?
+						
+					return true;
+				}
+				
+				//==========================//
+				//-----Toggles YAY :D-------------------------------------------------------------------
+				//==========================//
+				
+				if (action.equals("dropLoot")) {
+					if (tm.dropLoot) {
+						tm.dropLoot = false;
+						sender.sendMessage(ChatColor.GRAY + "Drop Loot disabled");
+					} else {
+						tm.dropLoot = true;
+						sender.sendMessage(ChatColor.GRAY + "Drop Loot enabled");
+					}
+					
+					return true;
+				}
+	
+				if (action.equals("rejoin")) {
+					if (tm.rejoin) {
+						tm.rejoin = false;
+						sender.sendMessage(ChatColor.GRAY + "Allow player rejoin disabled");
+					} else {
+						tm.rejoin = true;
+						sender.sendMessage(ChatColor.GRAY + "Allow player rejoin enabled");
+					}
+					
+					return true;
+				}
+				
+				if (action.equals("lockGear")) {
+					if (tm.lockGear) {
+						tm.lockGear = false;
+						sender.sendMessage(ChatColor.GRAY + "Lock Gear disabled");
+					} else {
+						tm.lockGear = true;
+						sender.sendMessage(ChatColor.GRAY + "Lock Gear enabled");
+					}
+					
+					return true;
+				}
+				
+				if (action.equals("colourTeamLeather")) {
+					if (tm.colourTeamLeather) {
+						tm.colourTeamLeather = false;
+						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather disabled");
+					} else {
+						tm.colourTeamLeather = true;
+						sender.sendMessage(ChatColor.GRAY + "Colour Team Leather enabled");
+					}
+					
+					return true;
+				}
+				
+				if (action.equals("gamemode")) {
+					if (args.length > 2 && tm.teams.containsKey(args[1])) {
+						int gm = Integer.parseInt(args[2]);
+						if(gm >= 0 && gm <= 2){
+							tm.teams.get(args[1]).setGamemode(GameMode.getByValue(gm));
+							sender.sendMessage(ChatColor.GRAY + "Gamemode " + gm + " has been set for " + tm.teams.get(args[1]).getName() + " team");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + "That team does not exist");
+					
+					return true;
+				}
+				
+				if (action.equals("locked")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isLocked()) {
+							tm.teams.get(args[1]).setLocked(false);
+							sender.sendMessage(ChatColor.GRAY + "Team Lock disabled");
+						} else {
+							tm.teams.get(args[1]).setLocked(true);
+							sender.sendMessage(ChatColor.GRAY + "Team Lock enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
+					
+					return true;
+				}
+						
+				if (action.equals("freeze")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isFrozen()) {
+							tm.teams.get(args[1]).setFreeze(false);
+							sender.sendMessage(ChatColor.GRAY + "Freeze disabled");
+						} else {
+							tm.teams.get(args[1]).setFreeze(true);
+							sender.sendMessage(ChatColor.GRAY + "Freeze enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + "That team does not exist");
+					
+					return true;
+				}
+				
+				if (action.equals("breakblock")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isBlockProtected()) {
+							tm.teams.get(args[1]).setBlockProtect(false);
+							sender.sendMessage(ChatColor.GRAY + "Breakblock disabled");
+						} else {
+							tm.teams.get(args[1]).setBlockProtect(true);
+							sender.sendMessage(ChatColor.GRAY + "Breakblock enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + "That team does not exist");
+					
+					return true;
+				}
+				
+				if (action.equals("spectateAftrDeath")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isSpectateAfterDeath()) {
+							tm.teams.get(args[1]).setSpectateAfterDeath(false);
+							sender.sendMessage(ChatColor.GRAY + "Spectate After Death disabled");
+						} else {
+							tm.teams.get(args[1]).setSpectateAfterDeath(true);
+							sender.sendMessage(ChatColor.GRAY + "Spectate After Death enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + "That team does not exist");
+					
+					return true;
+				}
+				
+				if (action.equals("friendlyfire")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isFriendlyFire()) {
+							tm.teams.get(args[1]).setFriendlyFire(false);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Fire disabled");
+						} else {
+							tm.teams.get(args[1]).setFriendlyFire(true);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Fire enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
+					
+					return true;
+				}
+				
+				if (action.equals("friendlyInvisibles")) {
+					if (args.length > 1 && tm.teams.containsKey(args[1])) {
+						if (tm.teams.get(args[1]).isFriendlyInvisibles()) {
+							tm.teams.get(args[1]).setFriendlyInvisibles(false);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles disabled");
+						} else {
+							tm.teams.get(args[1]).setFriendlyInvisibles(true);
+							sender.sendMessage(ChatColor.GRAY + "Friendly Invisibles enabled");
+						}
+					} else
+						sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
+					
+					return true;
+				}
+				
+				
+				//-----Set Teams Equipment-------------------------------------------------------------------
+				if (action.equals("setgear")) {
 					if (sender instanceof Player) {
 						if (args.length > 1 && tm.teams.containsKey(args[1])) {
 							Player player = (Player)sender;
@@ -558,50 +532,44 @@ public class CommandExe implements CommandExecutor {
 							sender.sendMessage(ChatColor.RED + "Invaild team name");
 					} else
 						sender.sendMessage(ChatColor.RED + "Player commmand only");
-				} else
-					sender.sendMessage(msgPermission);
-
-				return true;
-			}
-
-			//-----Winning!-------------------------------------------------------------------
-			if (action.equals("win") || (action.equals("end"))) {//TODO:some day
-				if (sender.hasPermission(permission + ".manage")) {
-					if (args.length > 1) {
-						if (tm.teams.containsKey(args[1]))
-							winner(tm.teams.get(args[1]));
-						else
-							sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
-					}
-					/*else {//TODO: add logic
-						int i = 0; winingTeam = null; Object winingTeams = new ArrayList();
-						for (Team team : tm.teams.values()) {
-							if (team.getPlayers().size() > i) {
-								i = team.getPlayers().size();
-								winingTeam = team;
-								(List)winingTeams).clear();
-							} else if (team.getPlayers().size() == i) {
-								(List)winingTeams).add(team.getName());
+	
+					return true;
+				}
+	
+				//-----Winning!-------------------------------------------------------------------
+				if (action.equals("win") || (action.equals("end"))) {//TODO:some day
+						if (args.length > 1) {
+							if (tm.teams.containsKey(args[1]))
+								winner(tm.teams.get(args[1]));
+							else
+								sender.sendMessage(ChatColor.RED + args[1] + " team does not exist");
+						}
+						/*else {//TODO: add logic - score / lives
+							int i = 0; winingTeam = null; Object winingTeams = new ArrayList();
+							for (Team team : tm.teams.values()) {
+								if (team.getPlayers().size() > i) {
+									i = team.getPlayers().size();
+									winingTeam = team;
+									(List)winingTeams).clear();
+								} else if (team.getPlayers().size() == i) {
+									(List)winingTeams).add(team.getName());
+								}
 							}
-						}
-						if (List)winingTeams).size() == 0) {
-							winer(winingTeam);
-						} else {
-							msg = null;
-							for (String txt : (List)winingTeams)
-								msg = msg + txt + ",";
-							tm.teamMsg(msg + " have all drawed first!", null);
-						}
-					}*/
-				} else
-					sender.sendMessage(msgPermission);
-
-				return true;
-			}
-			
-			//-----Even Teams-------------------------------------------------------------------
-			if (action.equals("even")) {//TODO:check it works
-				if (sender.hasPermission(permission + ".manage")) {
+							if (List)winingTeams).size() == 0) {
+								winer(winingTeam);
+							} else {
+								msg = null;
+								for (String txt : (List)winingTeams)
+									msg = msg + txt + ",";
+								tm.teamMsg(msg + " have all drawed first!", null);
+							}
+						}*/
+	
+					return true;
+				}
+				
+				//-----Even Teams-------------------------------------------------------------------
+				if (action.equals("even")) {
 					tm.globalMsg("Prepare for evening of teams...");
 					tm.getServer().getScheduler().runTaskLater(tm, new Runnable() {
 						public void run() {
@@ -622,15 +590,12 @@ public class CommandExe implements CommandExecutor {
 							tm.globalMsg(ChatColor.GRAY + "Teams have now be evened!");
 						}
 					}, 200L);
-				} else
-					sender.sendMessage(msgPermission);
-
-				return true;
-			}
-			
-			//-----Shuffle Teams-------------------------------------------------------------------
-			if (action.equals("shuffle")) {//TODO:check it works
-				if (sender.hasPermission(permission + ".manage")) {
+	
+					return true;
+				}
+				
+				//-----Shuffle Teams-------------------------------------------------------------------
+				if (action.equals("shuffle")) {
 					tm.globalMsg("Prepare for shuffling of teams...");
 					tm.getServer().getScheduler().runTaskLater(tm, new Runnable() {
 						public void run() {
@@ -646,34 +611,31 @@ public class CommandExe implements CommandExecutor {
 							tm.globalMsg(ChatColor.GRAY + "Teams have now be shuffled, say hi to yor new team mates!");
 						}
 					}, 200L);
-				} else {
-					sender.sendMessage(msgPermission);
+						
+					return true;
 				}
-				return true;
-			}
-			
-			//-----Clear Teams-------------------------------------------------------------------
-			if (action.equals("clear")) {
-				if (sender.hasPermission(permission + ".kick")) {
+				
+				//-----Clear Teams-------------------------------------------------------------------
+				if (action.equals("clear")) {
 					for (TeamManager team : tm.teams.values()) {
 						while(team.getPlayers().size() > 0)
 							team.getPlayers().get(0).remove(false);
 					}
 					tm.globalMsg("All Teams have been cleared, you are now are all alone :'(");
 					sender.sendMessage(ChatColor.GRAY + "Teams have been successfully cleared");
-				} else
-					sender.sendMessage(msgPermission);
-
-				return true;
+	
+					return true;
+				}
 			}
-			
+				
 			//////////////////////////
 			///Admin Based Commands///
-			//////////////////////////		
+			//////////////////////////
 			
-			//-----Create Team-------------------------------------------------------------------
-			if (action.equals("create")) {
-				if (sender.hasPermission(permission + ".control")) {
+			if(sender.hasPermission(permission + ".control")) {
+				
+				//-----Create Team-------------------------------------------------------------------
+				if (action.equals("create")) {
 					if (args.length > 1 && !tm.teams.containsKey(args[1])) {
 						TeamManager newTeam = tm.newTeam(args[1]);
 						if(newTeam != null) {
@@ -683,36 +645,51 @@ public class CommandExe implements CommandExecutor {
 							sender.sendMessage(ChatColor.RED + "Invaild team name, choose between" + tm.theTeamNames);
 					} else
 						sender.sendMessage(ChatColor.RED + "There is allready a " + args[1] + " team");
-				} else
-					sender.sendMessage(msgPermission);
-				
-				return true;
-			}
-
-			//-----Delete Team-------------------------------------------------------------------
-			if (action.equals("del")) {
-				if (sender.hasPermission(permission + ".control")) {
+					
+					return true;
+				}
+	
+				//-----Delete Team-------------------------------------------------------------------
+				if (action.equals("del")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
 						tm.teams.get(args[1]).delTeam();
-						tm.teams.remove(args[1]);
 					} else
 						sender.sendMessage(ChatColor.RED + "Invaild team name");
-				} else
-					sender.sendMessage(msgPermission);
+	
+					return true;
+				}
+	
+				if (action.equals("debug")) {			
+					tm.getLogger().info("WIP");
+	
+					return true;
+				}
+				
+				if (action.equals("load")) {
+					String profile = "default";
+					if (args.length > 1)
+						profile = args[1];
+					else
+						tm.load("default");
+					
+					tm.load(profile);
+					sender.sendMessage("Team Plugin " + profile + " Setting have been Loaded!");
+					
+					return true;
+				}
+				
+				if (action.equals("save")) {
+					String profile = "default";
+					if (args.length > 1)
+						profile = args[1];
+					else
+						tm.save("default");
+					
+					tm.save(profile);
+					sender.sendMessage("Team Plugin " + profile + " Setting have been Saved!");
 
-				return true;
-			}
-
-			if (action.equals("debug")) {			
-				tm.getLogger().info("WIP"); //TODO:do
-
-				return true;
-			}
-			
-			if (action.equals("save")) {
-				tm.save();
-				sender.sendMessage("Team Plugin Setting have been Saved!");
-				return true;
+					return true;
+				}
 			}
 
 			if (action.equals("info")) {

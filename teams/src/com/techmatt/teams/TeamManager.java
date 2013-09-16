@@ -161,7 +161,7 @@ public class TeamManager {
 		this.breakBlock = value;
 	}
 	
-	public void setFreeze(boolean value) {//TODO: fix jump bug vol = 0 ?
+	public void setFreeze(boolean value) {
 		this.freeze = value;
 		if(value){
 			for (PlayerState plySte : this.players) {
@@ -269,10 +269,12 @@ public class TeamManager {
 		plySte.getPlayer().sendMessage("You have now on " + this.name + " team, say hello to your new team mates!");
 	}
 	
-	public void removePlayer(PlayerState plySte) {
-		this.players.remove(plySte);
+	public void removePlayer(PlayerState plySte, Boolean msg) {
 		tm.players.remove(plySte);
-		this.team.removePlayer(plySte.getPlayer());
+		if (msg){
+			plySte.getPlayer().sendMessage("You have now left " + this.name + " team");
+			this.teamMsg(plySte.getPlayer().getDisplayName() + " has now left your team");
+		}
 	}
 	
 	public void tpTeam() {
@@ -289,7 +291,7 @@ public class TeamManager {
 		i.getWorld().playEffect(i, Effect.SMOKE, 4);
 	}
 	
-	public void restTeam() { // TODO: review function
+	public void restTeam() {
 		this.score = 0;
 		for (PlayerState plySte : this.players){
 			plySte.setSpectateMode(false);
@@ -309,5 +311,6 @@ public class TeamManager {
 			this.players.get(0).remove(false);
 		}
 		this.team.unregister();
+		tm.teams.remove(this);
 	}
 }

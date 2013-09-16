@@ -114,18 +114,13 @@ public class PlayerState {
 			this.player.teleport(this.team.getSpawn());
 	}
 	
-	public void remove(boolean msg) {
+	public void remove(Boolean msg) {
+		this.team.removePlayer(this, msg);
 		this.player.getInventory().setContents(oldInventContent);
 		this.player.getInventory().setArmorContents(oldInventArmor);
 		this.player.teleport(oldLocation);
 		this.player.setGameMode(prevGamemode);		
 		if(this.team.isFrozen())
 			this.player.setWalkSpeed((float)0.2);
-		
-		this.team.removePlayer(this);
-		if (msg){
-			this.player.sendMessage("You have now left " + this.team.getName() + " team");
-			this.team.teamMsg(this.player.getDisplayName() + " has now left your team");
-		}
 	}
 }
