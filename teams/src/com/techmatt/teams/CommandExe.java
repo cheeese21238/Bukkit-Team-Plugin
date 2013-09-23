@@ -42,7 +42,7 @@ public class CommandExe implements CommandExecutor {
 					plySte.setSpectateMode(true);
 					sender.sendMessage("Spectator Mode Enabled");
 				} else{
-					if(!tm.teams.get(sender).isSpectateAfterDeath()){
+					if(!plySte.getTeam().isSpectateAfterDeath()){
 						plySte.setSpectateMode(false);
 						sender.sendMessage("Spectator Mode Disabled");
 					} else
@@ -58,10 +58,13 @@ public class CommandExe implements CommandExecutor {
 		if (cmd.getName().equals("tc") && sender instanceof Player) {
 			if (tm.players.containsKey(sender)){
 				PlayerState plySte = tm.players.get(sender);
-				if(plySte.isTeamChat())
+				if(plySte.isTeamChat()) {
 					plySte.setChat(false);
-				else
+					sender.sendMessage(ChatColor.GRAY + "Team Chat Disabled");
+				} else {
 					plySte.setChat(true);
+					sender.sendMessage(ChatColor.GRAY + "Team Chat Enabled");
+				}
 			} else
 				sender.sendMessage(msgNotInTeam);
 				
@@ -69,7 +72,7 @@ public class CommandExe implements CommandExecutor {
 		}
 		
 		//-----Ready Up----------------------------------------------------------------------
-		if (cmd.getName().equals("ready") && sender instanceof Player) {
+		if (cmd.getName().equals("ready") && sender instanceof Player) { //TODO: move to team
 			if (tm.players.containsKey(sender)) {
 				PlayerState plySte = tm.players.get(sender);
 				if(plySte.isReady())
@@ -149,11 +152,11 @@ public class CommandExe implements CommandExecutor {
 				}
 
 				//-----Force Player on Team-------------------------------------------------------------------
-				if (args.length > 2 &&
+				if (args.length > 2 && 
 						sender.hasPermission(permission + ".setPlayersTeam") &&
 						tm.getServer().getPlayer(args[1]) != null &&
 						tm.teams.containsKey(args[2])) {
-					tm.teams.get(args[2]).addPlayer(tm.getServer().getPlayer(args[1]));
+					tm.teams.get(args[2]).addPlayer(tm.getServer().getPlayer(args[1])); //TODO: don't work
 					return true;
 				}	
 				
@@ -171,7 +174,7 @@ public class CommandExe implements CommandExecutor {
 			}
 			
 			//-----TP to Team Spawn-------------------------------------------------------------------
-			if (action.equals("spawn")) {
+			if (action.equals("spawn")) { //TODO: error //TODO: not spawning in right place
 				if (sender.hasPermission(permission + ".spawn")){
 					if(sender instanceof Player){
 						if (tm.players.containsKey(sender)){					
@@ -198,6 +201,9 @@ public class CommandExe implements CommandExecutor {
 						if(playerTeam == team) {
 							for (PlayerState plySte : team.getPlayers())
 								msg += "\n" + plySte.getPlayer().getDisplayName() + playersHealth(plySte.getPlayer()) + (plySte.isReady() ? " - Ready!" : "") + (plySte.isSpectator() ? " - Spectator!" : "");
+						} else {
+							for (PlayerState plySte : team.getPlayers())
+								msg += "\n" + plySte.getPlayer().getDisplayName() + (plySte.isReady() ? " - Ready!" : "") + (plySte.isSpectator() ? " - Spectator!" : "");
 						}
 					}
 					sender.sendMessage(msg);
@@ -219,7 +225,7 @@ public class CommandExe implements CommandExecutor {
 			//////////////////////////////
 			
 			//-----Scoring System-------------------------------------------------------------------
-			if (action.equals("score")) { //TODO: Add scoreboard 1.5
+			if (action.equals("score")) { //TODO: Add scoreboard 1.5 //TODO: notice twice
 				if (args.length > 3 && args[1].equals("set")) { //Setting Score e.g. /team score set blue 3
 					if (sender.hasPermission(permission + ".manage")) {
 						if (tm.teams.containsKey(args[2])) {
@@ -308,7 +314,7 @@ public class CommandExe implements CommandExecutor {
 			}
 			
 			//-----Kick Player from Team-------------------------------------------------------------------
-			if (action.equals("kick")) {
+			if (action.equals("kick")) { //TODO: need a msg for admin
 				if (sender.hasPermission(permission + ".kick")) {
 					if (args.length > 1) {
 						Player player = tm.getServer().getPlayer(args[1]);
@@ -364,7 +370,7 @@ public class CommandExe implements CommandExecutor {
 				//-----Toggles YAY :D-------------------------------------------------------------------
 				//==========================//
 				
-				if (action.equals("dropLoot")) {
+				if (action.equals("droploot")) {
 					if (tm.dropLoot) {
 						tm.dropLoot = false;
 						sender.sendMessage(ChatColor.GRAY + "Drop Loot disabled");
@@ -388,7 +394,7 @@ public class CommandExe implements CommandExecutor {
 					return true;
 				}
 				
-				if (action.equals("lockGear")) {
+				if (action.equals("lockgear")) {
 					if (tm.lockGear) {
 						tm.lockGear = false;
 						sender.sendMessage(ChatColor.GRAY + "Lock Gear disabled");
@@ -470,7 +476,7 @@ public class CommandExe implements CommandExecutor {
 					return true;
 				}
 				
-				if (action.equals("spectateAftrDeath")) {
+				if (action.equals("spectateaftrdeath")) { //TODO: still visbale
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
 						if (tm.teams.get(args[1]).isSpectateAfterDeath()) {
 							tm.teams.get(args[1]).setSpectateAfterDeath(false);
@@ -500,7 +506,7 @@ public class CommandExe implements CommandExecutor {
 					return true;
 				}
 				
-				if (action.equals("friendlyInvisibles")) {
+				if (action.equals("friendlyinvisibles")) {
 					if (args.length > 1 && tm.teams.containsKey(args[1])) {
 						if (tm.teams.get(args[1]).isFriendlyInvisibles()) {
 							tm.teams.get(args[1]).setFriendlyInvisibles(false);
@@ -670,10 +676,12 @@ public class CommandExe implements CommandExecutor {
 					if (args.length > 1)
 						profile = args[1];
 					else
-						tm.load("default");
+						profile = "default";
 					
-					tm.load(profile);
-					sender.sendMessage("Team Plugin " + profile + " Setting have been Loaded!");
+					if(tm.load(profile))
+						sender.sendMessage("Team Plugin " + profile + " Setting have been Loaded!");
+					else
+						sender.sendMessage(ChatColor.RED + "Team Plugin " + profile + " Setting FAILED to Loaded!");
 					
 					return true;
 				}
@@ -683,11 +691,13 @@ public class CommandExe implements CommandExecutor {
 					if (args.length > 1)
 						profile = args[1];
 					else
-						tm.save("default");
+						profile = "default";
 					
-					tm.save(profile);
-					sender.sendMessage("Team Plugin " + profile + " Setting have been Saved!");
-
+					if(tm.save(profile))
+						sender.sendMessage("Team Plugin " + profile + " Setting have been Saved!");
+					else
+						sender.sendMessage(ChatColor.RED + "Team Plugin " + profile + " Setting FAILED to Saved!");
+					
 					return true;
 				}
 			}

@@ -101,11 +101,12 @@ public class PlayerState {
 		this.player.setGameMode(this.team.getGamemode());
 		
 		this.player.getInventory().clear();
-		this.player.getInventory().setHelmet(team.getHelmet());
-		this.player.getInventory().setChestplate(team.getChestplate());
-		this.player.getInventory().setLeggings(team.getLeggings());
-		this.player.getInventory().setBoots(team.getBoots());
-		this.player.getInventory().setContents(team.getEquipment());
+		this.player.getInventory().setHelmet(this.team.getHelmet());
+		this.player.getInventory().setChestplate(this.team.getChestplate());
+		this.player.getInventory().setLeggings(this.team.getLeggings());
+		this.player.getInventory().setBoots(this.team.getBoots());
+		if(this.team.getEquipment() != null)
+			this.player.getInventory().setContents(this.team.getEquipment());
 		
 		if(this.team.isFrozen())
 			this.player.setWalkSpeed(0);

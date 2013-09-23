@@ -6,14 +6,19 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -44,17 +49,20 @@ public class Teams extends JavaPlugin {
 		//this.board = this.sr.getNewScoreboard();	
 		commandExecutor = new CommandExe(this);
 		eventlistener = new EventListener(this);
-		getServer().getPluginManager().registerEvents(eventlistener, this);
-		getCommand("team").setExecutor(commandExecutor);
-		getCommand("tc").setExecutor(commandExecutor);
-		getCommand("spectate").setExecutor(commandExecutor);
-		getCommand("ready").setExecutor(commandExecutor);
+		this.getServer().getPluginManager().registerEvents(eventlistener, this);
+		this.getCommand("team").setExecutor(commandExecutor);
+		this.getCommand("tc").setExecutor(commandExecutor);
+		this.getCommand("spectate").setExecutor(commandExecutor);
+		this.getCommand("ready").setExecutor(commandExecutor);
 		
 		sr = Bukkit.getScoreboardManager();
 		board = sr.getNewScoreboard();
 		
-		//load("default");	
-		getLogger().info("Team Work v" + getDescription().getVersion() + " plugin has successfully loaded");
+		this.getLogger().info("Team Work v" + getDescription().getVersion() + " plugin has successfully loaded");
+	}
+	
+	public void onDisable() {
+		this.getLogger().info("Team Work v" + getDescription().getVersion() + " has been disabled. :(");
 	}
 	
 	public TeamManager newTeam(String color) {
@@ -74,22 +82,31 @@ public class Teams extends JavaPlugin {
 		}
 		return null;
 	}
-	
-	public void onDisable() {
-		getLogger().info("Team Work v" + getDescription().getVersion() + " has been disabled. :(");
-	}
-	
-	public void load(String event) {
-		//saveDefaultConfig();
-		event += ".";
-		
-		this.lockGear = getConfig().getBoolean(event + "lockGear");
-		this.dropLoot = getConfig().getBoolean(event + "dropLoot");
-		this.rejoin = getConfig().getBoolean(event + "rejoin");
-		this.colourTeamLeather = getConfig().getBoolean(event + "colourTeamLeather");
 
-		if(getConfig().contains(event + "teams")) {
-			for (String key : getConfig().getConfigurationSection(event + "teams").getKeys(false)) {
+	public Boolean load(String event) {
+		try {
+			this.getConfig().load(new File(getDataFolder(), event + ".yml"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			this.getLogger().log(Level.SEVERE, "Failed to Load " + event + " Config File");
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			this.getLogger().log(Level.SEVERE,"Failed to Load " + event + " Config File");
+			return false;
+		} catch (InvalidConfigurationException e) {
+			e.printStackTrace();
+			this.getLogger().log(Level.SEVERE,"Failed to Load " + event + " Config File");
+			return false;
+		}
+		
+		this.lockGear = this.getConfig().getBoolean("lockGear");
+		this.dropLoot = this.getConfig().getBoolean("dropLoot");
+		this.rejoin = this.getConfig().getBoolean("rejoin");
+		this.colourTeamLeather = this.getConfig().getBoolean("colourTeamLeather");
+
+		if(this.getConfig().contains("teams")) {
+			for (String key : this.getConfig().getConfigurationSection("teams").getKeys(false)) { //TODO: del teams
 				TeamManager team; 
 				if(this.teams.containsKey(key)) {
 					team = this.teams.get(key);
@@ -97,10 +114,10 @@ public class Teams extends JavaPlugin {
 					team = this.newTeam(key);
 					this.teams.put(key, team);
 				}
-				String prefix = event + "teams." + key + ".";
+				String prefix = "teams." + key + ".";
 				
-				if (getConfig().contains(prefix + "spawn")) {
-					String[] spawn = getConfig().getString(prefix + "spawn").split(",");
+				if (this.getConfig().contains(prefix + "spawn")) {
+					String[] spawn = this.getConfig().getString(prefix + "spawn").split(",");
 					team.setSpawn(new Location(
 							getServer().getWorld(spawn[0]),
 							Double.parseDouble(spawn[1]),
@@ -109,62 +126,62 @@ public class Teams extends JavaPlugin {
 					));
 				}
 				
-				team.setScore(							getConfig().getInt(prefix + "score"));
-				team.setGamemode(GameMode.getByValue(	getConfig().getInt(prefix + "gamemode")));
-				//team.setLocked(						getConfig().getInt(prefix + "locked"));
-				team.setFriendlyInvisibles(				getConfig().getBoolean(prefix + "friendlyInvisibles"));
-				team.setFriendlyFire(					getConfig().getBoolean(prefix + "friendlyFire"));
-				team.setFreeze(							getConfig().getBoolean(prefix + "freeze"));
-				team.setBlockProtect(					getConfig().getBoolean(prefix + "blockProtect"));
-				team.setSpectateAfterDeath(				getConfig().getBoolean(prefix + "spctAftrDeath"));
+				team.setScore(							this.getConfig().getInt(prefix + "score"));
+				team.setGamemode(GameMode.getByValue(	this.getConfig().getInt(prefix + "gamemode")));
+				//team.setLocked(						this.getConfig().getInt(prefix + "locked"));
+				team.setFriendlyInvisibles(				this.getConfig().getBoolean(prefix + "friendlyInvisibles"));
+				team.setFriendlyFire(					this.getConfig().getBoolean(prefix + "friendlyFire"));
+				team.setFreeze(							this.getConfig().getBoolean(prefix + "freeze"));
+				team.setBlockProtect(					this.getConfig().getBoolean(prefix + "blockProtect"));
+				team.setSpectateAfterDeath(				this.getConfig().getBoolean(prefix + "spctAftrDeath"));
 				
-				if(getConfig().contains(prefix + "equipment")) {
-					List<?> invent = getConfig().getList(prefix + "equipment.invent");
+				if(this.getConfig().contains(prefix + "equipment")) {
+					List<?> invent = this.getConfig().getList(prefix + "equipment.invent");
 					ItemStack[] newInvent = new ItemStack[invent.size()];
 					for (int i = 0; i < invent.size(); i++) {
 						newInvent[i] = this.buildIteamStackFromString(invent.get(i).toString());
 					}
 					
 					team.setEquipment(
-							this.buildIteamStackFromString(getConfig().getString(prefix + "equipment.helmet")),
-							this.buildIteamStackFromString(getConfig().getString(prefix + "equipment.chestplate")),
-							this.buildIteamStackFromString(getConfig().getString(prefix + "equipment.leggings")),
-							this.buildIteamStackFromString(getConfig().getString(prefix + "equipment.boots")),
+							this.buildIteamStackFromString(this.getConfig().getString(prefix + "equipment.helmet")),
+							this.buildIteamStackFromString(this.getConfig().getString(prefix + "equipment.chestplate")),
+							this.buildIteamStackFromString(this.getConfig().getString(prefix + "equipment.leggings")),
+							this.buildIteamStackFromString(this.getConfig().getString(prefix + "equipment.boots")),
 							newInvent
 					);
 				}
 			}
 		}
+		
+		return true;
 	}
 	
-	public void save(String event) {
-		//save main settings
-		event += ".";
-		
-		getConfig().set(event + "lockGear", this.lockGear);
-		getConfig().set(event + "dropLoot", this.dropLoot);
-		getConfig().set(event + "rejoin", this.rejoin);
-		getConfig().set(event + "colourTeamLeather", this.colourTeamLeather);
+	public Boolean save(String event) {
+		//save main settings		
+		this.getConfig().set("lockGear", this.lockGear);
+		this.getConfig().set("dropLoot", this.dropLoot);
+		this.getConfig().set("rejoin", this.rejoin);
+		this.getConfig().set("colourTeamLeather", this.colourTeamLeather);
 		
 		//Loop through team settings
 		for (Map.Entry<String, TeamManager> teamList : teams.entrySet()) {
 			String key = teamList.getKey();
 			TeamManager team = teamList.getValue();
-			String prefix = event + "teams." + key + ".";
+			String prefix = "teams." + key + ".";
 			
 			//save team settings
-			getConfig().set(prefix + "score", 				team.getScore());
-			getConfig().set(prefix + "gamemode", 			team.getGamemode().getValue());
-			//getConfig().set("teams." + n + ".locked", 	team.locked())); //TODO: add when players are added
-			getConfig().set(prefix + "friendlyInvisibles", 	team.isFriendlyInvisibles());
-			getConfig().set(prefix + "friendlyFire", 		team.isFriendlyFire());
-			getConfig().set(prefix + "freeze", 				team.isFrozen());
-			getConfig().set(prefix + "blockProtect", 		team.isBlockProtected());
-			getConfig().set(prefix + "spctAftrDeath", 		team.isSpectateAfterDeath());
+			this.getConfig().set(prefix + "score", 				team.getScore());
+			this.getConfig().set(prefix + "gamemode", 			team.getGamemode().getValue());
+			//this.getConfig().set("teams." + n + ".locked", 	team.locked())); //TODO: add when players are added
+			this.getConfig().set(prefix + "friendlyInvisibles", 	team.isFriendlyInvisibles());
+			this.getConfig().set(prefix + "friendlyFire", 		team.isFriendlyFire());
+			this.getConfig().set(prefix + "freeze", 				team.isFrozen());
+			this.getConfig().set(prefix + "blockProtect", 		team.isBlockProtected());
+			this.getConfig().set(prefix + "spctAftrDeath", 		team.isSpectateAfterDeath());
 			
 			//save team spawn location
 			if (team.getSpawn() != null) {
-				getConfig().set(prefix + "spawn",
+				this.getConfig().set(prefix + "spawn",
 								team.getSpawn().getWorld().getName() + "," +
 								team.getSpawn().getX() + "," +
 								team.getSpawn().getY() + "," +
@@ -174,13 +191,13 @@ public class Teams extends JavaPlugin {
 			
 			//save team equipment
 			if(team.getHelmet() != null)
-				getConfig().set(prefix + "equipment.helmet", 	this.convterItemStackToString(team.getHelmet()));	
+				this.getConfig().set(prefix + "equipment.helmet", 	this.convterItemStackToString(team.getHelmet()));	
 			if(team.getChestplate() != null)
-				getConfig().set(prefix + "equipment.chestplate",this.convterItemStackToString(team.getChestplate()));
+				this.getConfig().set(prefix + "equipment.chestplate",this.convterItemStackToString(team.getChestplate()));
 			if(team.getLeggings() != null)
-				getConfig().set(prefix + "equipment.leggings", 	this.convterItemStackToString(team.getLeggings()));
+				this.getConfig().set(prefix + "equipment.leggings", 	this.convterItemStackToString(team.getLeggings()));
 			if(team.getBoots() != null)
-				getConfig().set(prefix + "equipment.boots",		this.convterItemStackToString(team.getBoots()));
+				this.getConfig().set(prefix + "equipment.boots",		this.convterItemStackToString(team.getBoots()));
 			
 			if(team.getEquipment() != null) {
 				List<String> itemIDs = new ArrayList<String>();
@@ -188,11 +205,19 @@ public class Teams extends JavaPlugin {
 					if(team.getEquipment()[i] != null)		
 						itemIDs.add(this.convterItemStackToString(team.getEquipment()[i]));
 				}
-				getConfig().set(prefix + "equipment.invent", itemIDs);
+				this.getConfig().set(prefix + "equipment.invent", itemIDs);
 			}
 		}
 		
-		saveConfig();
+		try {
+			this.getConfig().save(new File(getDataFolder(), event + ".yml"));
+		} catch (IOException e) {
+			e.printStackTrace();
+			this.getLogger().log(Level.SEVERE, "Failed to Save " + event + " Config File");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private ItemStack buildIteamStackFromString(String item) {
@@ -223,6 +248,7 @@ public class Teams extends JavaPlugin {
 		return itemString;
 	}
 		
+	
 	public void globalMsg(String msg) {
 		for (PlayerState plySte : players.values())
 				plySte.getPlayer().sendMessage(msg);

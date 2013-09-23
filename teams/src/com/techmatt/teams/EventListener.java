@@ -74,7 +74,7 @@ public class EventListener implements Listener {
 	}
 
 	@EventHandler
-	public void leaveTeam(PlayerQuitEvent event) {
+	public void leaveTeam(PlayerQuitEvent event) { //TODO: lose stuff
 		if (tm.players.containsKey(event.getPlayer())){
 			PlayerState plySte = tm.players.get(event.getPlayer());
 			plySte.updateLastOnline();

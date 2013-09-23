@@ -190,7 +190,7 @@ public class TeamManager {
 		this.team.setCanSeeFriendlyInvisibles(value);
 	}
 	
-	private void setColouredLeather() {
+	private void setColouredLeather() { //TODO: don't work
 		if(tm.colourTeamLeather) {
 			if(this.helmet != null && this.helmet.getType() == Material.LEATHER_HELMET) {
 				LeatherArmorMeta helmetMet = (LeatherArmorMeta) helmet.getItemMeta();
@@ -270,6 +270,8 @@ public class TeamManager {
 	}
 	
 	public void removePlayer(PlayerState plySte, Boolean msg) {
+		this.players.remove(plySte);
+		this.team.removePlayer(plySte.getPlayer());
 		tm.players.remove(plySte);
 		if (msg){
 			plySte.getPlayer().sendMessage("You have now left " + this.name + " team");
