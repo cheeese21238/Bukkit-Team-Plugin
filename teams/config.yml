@@ -1,7 +1,0 @@
-# Team config.yml
-default:
-  lockGear: false
-  dropLoot: false
-  rejoin: true
-  colourTeamLeather: true
-  teams:
